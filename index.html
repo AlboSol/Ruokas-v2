@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Ruokasi</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <meta name="theme-color" content="#0A84FF" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Ruokasi" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header class="nav">
+    <div class="nav__title">
+      <div class="appmark" aria-hidden="true"></div>
+      <div>
+        <h1>Ruokasi</h1>
+        <p class="sub">1900–2000 kcal / päivä</p>
+      </div>
+    </div>
+    <button class="ghost" id="btnReset" title="Nollaa päivä">Nollaa</button>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="row">
+        <div>
+          <h2>Tänään</h2>
+          <p class="muted" id="todayLabel">–</p>
+        </div>
+        <div class="pill" id="statusPill">OK</div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi__label">Syöty</div>
+          <div class="kpi__value"><span id="kcalEaten">0</span><span class="unit">kcal</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Jäljellä</div>
+          <div class="kpi__value"><span id="kcalLeft">0</span><span class="unit">kcal</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Arvioitu kulutus</div>
+          <div class="kpi__value"><span id="kcalBurn">0</span><span class="unit">kcal</span></div>
+        </div>
+      </div>
+
+      <div class="macro-grid">
+        <div class="macro">
+          <div class="macro__top">
+            <span>Proteiini</span><span class="muted"><span id="pNow">0</span> / <span id="pGoal">140</span> g</span>
+          </div>
+          <div class="bar"><div class="bar__fill" id="pBar"></div></div>
+        </div>
+        <div class="macro">
+          <div class="macro__top">
+            <span>Hiilarit</span><span class="muted"><span id="cNow">0</span> / <span id="cGoal">170</span> g</span>
+          </div>
+          <div class="bar"><div class="bar__fill" id="cBar"></div></div>
+        </div>
+        <div class="macro">
+          <div class="macro__top">
+            <span>Rasva</span><span class="muted"><span id="fNow">0</span> / <span id="fGoal">70</span> g</span>
+          </div>
+          <div class="bar"><div class="bar__fill" id="fBar"></div></div>
+        </div>
+      </div>
+
+      <details class="details">
+        <summary>Lisäasetukset</summary>
+        <div class="form-grid">
+          <label>
+            Kaloritavoite (max)
+            <input type="number" id="goalMax" min="1200" max="4500" step="10" value="2000" />
+          </label>
+          <label>
+            Kaloritavoite (min)
+            <input type="number" id="goalMin" min="1200" max="4500" step="10" value="1900" />
+          </label>
+          <label>
+            Proteiinitavoite (g)
+            <input type="number" id="goalP" min="50" max="250" step="5" value="140" />
+          </label>
+          <label>
+            Hiilaritavoite (g)
+            <input type="number" id="goalC" min="50" max="350" step="5" value="170" />
+          </label>
+          <label>
+            Rasvatavoite (g)
+            <input type="number" id="goalF" min="30" max="150" step="5" value="70" />
+          </label>
+          <label>
+            Askeleet tänään
+            <input type="number" id="steps" min="0" max="60000" step="100" value="0" />
+          </label>
+          <label>
+            Treeni (kcal, jos tiedossa)
+            <input type="number" id="workoutKcal" min="0" max="2500" step="10" value="0" />
+          </label>
+          <label>
+            Uni (tunnit)
+            <input type="number" id="sleepH" min="0" max="14" step="0.5" value="0" />
+          </label>
+        </div>
+        <p class="hint">Askeleet arvioidaan ~0.04 kcal/askel. Unen perusteella sovellus antaa vain kevyen huomion (ei muuta automaattisesti budjettia).</p>
+      </details>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <h2>Lisää ruokaa</h2>
+        <div class="seg">
+          <button class="seg__btn is-on" data-meal="aamiainen">Aamiainen</button>
+          <button class="seg__btn" data-meal="lounas">Lounas</button>
+          <button class="seg__btn" data-meal="välipala">Välipala</button>
+          <button class="seg__btn" data-meal="päivällinen">Päivällinen</button>
+          <button class="seg__btn" data-meal="iltapala">Iltapala</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tabhint" id="mealHint">Valitse vaihtoehdot ja säädä annoskoot.</div>
+        <div id="presetList" class="list"></div>
+      </div>
+
+      <div class="row row--tight">
+        <button class="primary" id="btnAddSelected">Lisää valitut</button>
+        <button class="ghost" id="btnClearSelected">Tyhjennä valinnat</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <h2>Omat ruoat</h2>
+        <button class="ghost" id="btnOpenCustom">Lisää oma</button>
+      </div>
+      <div id="customList" class="list"></div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <h2>Päivän syömiset</h2>
+        <button class="ghost" id="btnExport">Vie</button>
+      </div>
+      <div id="logList" class="log"></div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <h2>Nopea ehdotus</h2>
+        <button class="ghost" id="btnSuggest">Päivitä</button>
+      </div>
+      <div class="suggest" id="suggestBox">–</div>
+    </section>
+
+    <footer class="footer">
+      <p class="muted">Vinkki: Safari → Jaa → “Lisää Koti-valikkoon”</p>
+    </footer>
+  </main>
+
+  <!-- Custom food modal -->
+  <dialog id="customDlg">
+    <form method="dialog" class="modal">
+      <h3>Lisää oma ruoka</h3>
+      <div class="form-grid">
+        <label>Nimi<input id="cfName" required placeholder="esim. Hehku 5 dl" /></label>
+        <label>Kalorit<input id="cfKcal" type="number" required min="0" step="1" /></label>
+        <label>Proteiini (g)<input id="cfP" type="number" required min="0" step="0.1" /></label>
+        <label>Hiilarit (g)<input id="cfC" type="number" required min="0" step="0.1" /></label>
+        <label>Rasva (g)<input id="cfF" type="number" required min="0" step="0.1" /></label>
+      </div>
+      <div class="row row--tight">
+        <button class="primary" value="ok">Tallenna</button>
+        <button class="ghost" value="cancel">Peruuta</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
