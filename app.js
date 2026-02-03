@@ -454,21 +454,17 @@ function wireSettings(){
 }
 
 function openCustomDialog(){
-  const dlg=$("customModal");
-  $("cfName").value=""; $("cfKcal").value=""; $("cfP").value=""; $("cfC").value=""; $("cfF").value="";
-  $("cfUnit").value=""; $("cfGPU").value="";
-  dlg.showModal();
-  dlg.addEventListener("close", ()=>{
-    if(dlg.returnValue!=="ok") return;
-    const name = ($("cfName").value||"").trim();
-    if(!name) return;
-    const per100 = {kcal:Number($("cfKcal").value||0), p:Number($("cfP").value||0), c:Number($("cfC").value||0), f:Number($("cfF").value||0)};
-    const unit = ($("cfUnit").value||"").trim() || "yks";
-    const gpu = Number($("cfGPU").value||100);
-    const id = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2);
-    state.customFoods.push({id, name, per100, unit, gramsPerUnit: gpu, maxUnits: 8, stepUnits: 0.5});
-    saveState(); renderAll();
-  }, {once:true});
+  const ov = $("customModal");
+  if(!ov) return;
+  // reset OFF UI (keep typed fields)
+  const st = document.getElementById("offStatus"); if(st) st.textContent = "–";
+  const box = document.getElementById("offResults"); if(box) box.innerHTML = "";
+  ov.classList.remove("is-hidden");
+}
+function closeCustomDialog(){
+  const ov = $("customModal");
+  if(!ov) return;
+  ov.classList.add("is-hidden");
 }
 function exportData(){
   const payload = {exportedAt:new Date().toISOString(), day: state.day, goals: state.goals, activity: state.activity, totals: totalsFromLog(), log: state.log, customFoods: state.customFoods};
@@ -623,6 +619,29 @@ window.addEventListener("load", ()=>{
   $("btnSuggest").addEventListener("click", ()=> { $("suggestBox").textContent = quickSuggestion(); const u=document.getElementById("suggestUpdated"); if(u){ u.textContent = "Päivitetty " + new Date().toLocaleTimeString("fi-FI",{hour:"2-digit",minute:"2-digit"}); } });
   renderMealPlan();
   $("btnOpenCustom").addEventListener("click", openCustomDialog);
+  const cClose = document.getElementById("btnCloseCustom");
+  const cCancel = document.getElementById("btnCancelCustom");
+  const cSave = document.getElementById("btnSaveCustom");
+  if(cClose) cClose.addEventListener("click", closeCustomDialog);
+  if(cCancel) cCancel.addEventListener("click", closeCustomDialog);
+  const cOverlay = document.getElementById("customModal");
+  if(cOverlay){ cOverlay.addEventListener("click", (e)=>{ if(e.target===cOverlay) closeCustomDialog(); }); }
+  if(cSave){
+    cSave.addEventListener("click", ()=>{
+      const name = (document.getElementById("cfName")?.value||"").trim();
+      const kcal = Number(document.getElementById("cfKcal")?.value||0);
+      const p = Number(document.getElementById("cfP")?.value||0);
+      const c = Number(document.getElementById("cfC")?.value||0);
+      const f = Number(document.getElementById("cfF")?.value||0);
+      const unit = (document.getElementById("cfUnit")?.value||"yks").trim() || "yks";
+      const gpu = Number(document.getElementById("cfGPU")?.value||100) || 100;
+      if(!name || !kcal){ alert("Täytä vähintään nimi ja kalorit / 100g."); return; }
+      const id = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2);
+      state.customFoods.push({ id, name, per100:{kcal,p,c,f}, unit, gramsPerUnit:gpu, defaultUnits:1.0, maxUnits:8, stepUnits:0.5 });
+      saveState(); closeCustomDialog(); renderAll();
+    });
+  }
+
   $("btnExport").addEventListener("click", exportData);
   $("btnReset").addEventListener("click", resetDay);
   wireSettings(); setMeal(currentMeal); renderAll();
