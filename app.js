@@ -1,5 +1,6 @@
 // Ruokasi v3.1 (FIX) – units + grams, keeps existing data
 const STORAGE_KEY = "ruokasi.v2";
+const VERSION = "v3.2.4.5";
 const todayKey = () => new Date().toISOString().slice(0,10);
 const round1 = (x) => Math.round(x*10)/10;
 const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
@@ -190,6 +191,22 @@ function renderOffResults(items){
     box.appendChild(row);
   });
 }
+
+async function runOffSearchGlobal(){
+  const q = (document.getElementById("offQuery")?.value||"").trim();
+  const st = document.getElementById("offStatus");
+  if(st) st.textContent = "Haetaan…";
+  try{
+    const items = await offSearch(q);
+    renderOffResults(items);
+  }catch(e){
+    if(st) st.textContent = "Virhe";
+    const box = document.getElementById("offResults");
+    if(box) box.innerHTML = `<div class="muted">Haku epäonnistui. Kokeile hetken päästä.</div>`;
+  }
+}
+window.RUOKASI_OFF_SEARCH = runOffSearchGlobal;
+
 
 function totalsFromLog(){
   return state.log.reduce((acc,it)=>({kcal:acc.kcal+it.totals.kcal,p:acc.p+it.totals.p,c:acc.c+it.totals.c,f:acc.f+it.totals.f}),{kcal:0,p:0,c:0,f:0});
@@ -615,6 +632,9 @@ if("serviceWorker" in navigator){
   window.addEventListener("load", ()=> navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 }
 window.addEventListener("load", ()=>{
+  const vb=document.getElementById("versionBadge"); if(vb){ vb.textContent = VERSION; }
+  const bOff=document.getElementById("btnOffSearch"); if(bOff){ bOff.addEventListener("click",(e)=>{e.preventDefault(); runOffSearchGlobal();}); }
+
   document.querySelectorAll(".seg__btn").forEach(btn=>btn.addEventListener("click", ()=>setMeal(btn.dataset.meal)));
   $("btnAddSelected").addEventListener("click", addSelected);
   $("btnClearSelected").addEventListener("click", clearSelected);
