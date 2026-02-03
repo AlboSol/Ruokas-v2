@@ -25,6 +25,7 @@
   </header>
 
   <main class="container">
+
     <section class="card">
       <div class="row">
         <div>
@@ -82,13 +83,13 @@
           <label>Treeni (kcal)<input type="number" id="workoutKcal" value="0" /></label>
           <label>Uni (tunnit)<input type="number" id="sleepH" value="0" /></label>
         </div>
-        <p class="hint">Askeleet arvioidaan ~0.04 kcal/askel.</p>
+        <p class="hint">Askeleet arvioidaan ~0.04 kcal/askel. (Watch/uni automaattisesti vaatii natiivin iOS-sovelluksen.)</p>
       </details>
     </section>
 
-    <section class="card">
+    <details class="card carddet" open id="secAdd">
+      <summary class="cardSum">Lisää ruokaa</summary>
       <div class="row">
-        <h2>Lisää ruokaa</h2>
         <div class="seg">
           <button class="seg__btn is-on" data-meal="aamiainen">Aamiainen</button>
           <button class="seg__btn" data-meal="lounas">Lounas</button>
@@ -97,39 +98,42 @@
           <button class="seg__btn" data-meal="iltapala">Iltapala</button>
         </div>
       </div>
-
       <div class="tabhint" id="mealHint">Valitse vaihtoehdot ja säädä annoskoot (yksiköt + grammat).</div>
       <div id="presetList" class="list"></div>
-
       <div class="row row--tight">
         <button class="primary" id="btnAddSelected">Lisää valitut</button>
         <button class="ghost" id="btnClearSelected">Tyhjennä valinnat</button>
       </div>
-    </section>
+    </details>
 
-    <section class="card">
+    <details class="card carddet" open id="secCustom">
+      <summary class="cardSum">Omat ruoat</summary>
       <div class="row">
-        <h2>Omat ruoat</h2>
+        <div class="muted">Lisää omia ruokia, joille määritetään myös yksikkö + grammat.</div>
         <button class="ghost" id="btnOpenCustom">Lisää oma</button>
       </div>
       <div id="customList" class="list"></div>
-    </section>
+    </details>
 
-    <section class="card">
+    <details class="card carddet" open id="secLog">
+      <summary class="cardSum">Päivän syömiset</summary>
       <div class="row">
-        <h2>Päivän syömiset</h2>
+        <div class="muted">Kirjaukset tälle päivälle.</div>
         <button class="ghost" id="btnExport">Vie</button>
       </div>
       <div id="logList" class="log"></div>
-    </section>
+    </details>
 
-    <section class="card">
-      <div class="row">
-        <h2>Nopea ehdotus</h2>
+    <details class="card carddet" open id="secSuggest">
+      <summary class="cardSum">Suositus</summary>
+      <div class="muted">Suositus tasapainottaa päivän makroja. Poista ateria täpällä, jos haluat.</div>
+      <div class="mealplan" id="mealPlan"></div>
+      <div class="row row--tight" style="margin-top:10px">
         <button class="ghost" id="btnSuggest">Päivitä</button>
       </div>
       <div class="suggest" id="suggestBox">–</div>
-    </section>
+    </details>
+
   </main>
 
   <dialog id="customDlg">
