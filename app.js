@@ -405,23 +405,26 @@ function addSelected(){
   saveState();
 
   const offBtn = document.getElementById("btnOffSearch");
-  if(offBtn){
-    offBtn.addEventListener("click", async ()=>{
-      const q = (document.getElementById("offQuery")?.value||"").trim();
-      const st = document.getElementById("offStatus");
-      if(st) st.textContent = "Haetaan…";
-      try{
-        const items = await offSearch(q);
-        renderOffResults(items);
-      }catch(e){
-        if(st) st.textContent = "Virhe";
-        const box = document.getElementById("offResults");
-        if(box) box.innerHTML = `<div class="muted">Haku epäonnistui. Kokeile hetken päästä.</div>`;
-      }
-    });
+  async function runOffSearch(){
+    const q = (document.getElementById("offQuery")?.value||"").trim();
+    const st = document.getElementById("offStatus");
+    if(st) st.textContent = "Haetaan…";
+    try{
+      const items = await offSearch(q);
+      renderOffResults(items);
+    }catch(e){
+      if(st) st.textContent = "Virhe";
+      const box = document.getElementById("offResults");
+      if(box) box.innerHTML = `<div class="muted">Haku epäonnistui. Kokeile hetken päästä.</div>`;
+    }
   }
-
-  renderAll();
+  if(offBtn){
+    // iOS/PWA sometimes misses click inside <dialog>, so bind multiple events
+    offBtn.addEventListener("click", (e)=>{ e.preventDefault(); runOffSearch(); });
+    offBtn.addEventListener("touchend", (e)=>{ e.preventDefault(); runOffSearch(); }, {passive:false});
+    offBtn.addEventListener("pointerup", (e)=>{ e.preventDefault(); runOffSearch(); });
+  }
+renderAll();
 
 }
 function clearSelected(){ selected.clear(); renderPresets(); }
