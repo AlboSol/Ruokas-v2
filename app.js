@@ -1,6 +1,6 @@
 // Ruokasi v3.1 (FIX) – units + grams, keeps existing data
 const STORAGE_KEY = "ruokasi.v2";
-const VERSION = "v3.2.4.5";
+const VERSION = "v3.2.4.6";
 const todayKey = () => new Date().toISOString().slice(0,10);
 const round1 = (x) => Math.round(x*10)/10;
 const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
