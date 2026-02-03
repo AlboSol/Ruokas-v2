@@ -136,6 +136,46 @@
     </details>
 
   </main>
+
+  <div class="modalOverlay is-hidden" id="customModal" role="dialog" aria-modal="true" aria-labelledby="customTitle">
+    <div class="modal">
+      <div class="modal__head">
+        <h3 id="customTitle">Lisää oma ruoka</h3>
+        <button class="ghost" type="button" id="btnCloseCustom" aria-label="Sulje">✕</button>
+      </div>
+
+      <details class="details" style="margin-top:10px">
+        <summary>Hae Open Food Factsista</summary>
+        <div class="form-grid" style="margin-top:10px">
+          <label>Haku (tuotenimi tai viivakoodi)
+            <input id="offQuery" placeholder="esim. Valio PROfeel / 6408432101234" />
+          </label>
+        </div>
+        <div class="row row--tight" style="margin-top:10px">
+          <button class="ghost" type="button" id="btnOffSearch">Hae</button>
+          <div class="muted" id="offStatus" style="margin-left:auto">–</div>
+        </div>
+        <div id="offResults" class="list" style="margin-top:10px"></div>
+        <p class="hint">Lähde: Open Food Facts (avoin tietokanta). Tarkista arvot, jos tiedoissa on puutteita.</p>
+      </details>
+
+      <div class="form-grid" style="margin-top:12px">
+        <label>Nimi<input id="cfName" /></label>
+        <label>Kalorit / 100g<input id="cfKcal" type="number" /></label>
+        <label>Proteiini / 100g<input id="cfP" type="number" /></label>
+        <label>Hiilarit / 100g<input id="cfC" type="number" /></label>
+        <label>Rasva / 100g<input id="cfF" type="number" /></label>
+        <label>Yksikkö<input id="cfUnit" placeholder="viipale, kpl, dl" /></label>
+        <label>g / yksikkö<input id="cfGPU" type="number" placeholder="35" /></label>
+      </div>
+
+      <div class="row row--tight" style="margin-top:12px">
+        <button class="primary" type="button" id="btnSaveCustom">Tallenna</button>
+        <button class="ghost" type="button" id="btnCancelCustom">Peruuta</button>
+      </div>
+    </div>
+  </div>
+
 <script src="app.js"></script>
 </body>
 </html>
