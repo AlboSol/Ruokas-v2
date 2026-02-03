@@ -454,7 +454,7 @@ function wireSettings(){
 }
 
 function openCustomDialog(){
-  const dlg=$("customDlg");
+  const dlg=$("customModal");
   $("cfName").value=""; $("cfKcal").value=""; $("cfP").value=""; $("cfC").value=""; $("cfF").value="";
   $("cfUnit").value=""; $("cfGPU").value="";
   dlg.showModal();

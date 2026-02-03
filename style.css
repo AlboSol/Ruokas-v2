@@ -74,3 +74,26 @@ dialog::backdrop{background:rgba(0,0,0,.35)} .modal{border:none;border-radius:18
 .offItem__main{min-width:0}
 .offItem__title{font-weight:900}
 .offItem__meta{font-size:12px;color:var(--muted);margin-top:2px}
+
+
+/* --- v3.2.4: custom modals (iOS PWA dialog fix) --- */
+.modalOverlay{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.35);
+  display:flex; align-items:flex-end; justify-content:center;
+  padding:16px;
+  z-index:9999;
+}
+.modalOverlay.is-hidden{display:none}
+.modal{
+  width:min(720px, 100%);
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  max-height:85vh;
+  overflow:auto;
+}
+.modal__head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modal__head h3{margin:0}
