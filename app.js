@@ -461,6 +461,8 @@ function openCustomDialog(){
   const box = document.getElementById("offResults"); if(box) box.innerHTML = "";
   ov.classList.remove("is-hidden");
 }
+
+window.RUOKASI_OPEN_CUSTOM = openCustomDialog;
 function closeCustomDialog(){
   const ov = $("customModal");
   if(!ov) return;

@@ -18,7 +18,7 @@
       <div class="appmark" aria-hidden="true"></div>
       <div>
         <h1>Ruokasi</h1>
-        <p class="sub">1900–2000 kcal / päivä</p>
+        <p class="sub">1900–2000 kcal / päivä • v3.2.4.4</p>
       </div>
     </div>
     <button class="ghost" id="btnReset" title="Nollaa päivä">Nollaa</button>
@@ -110,7 +110,7 @@
       <summary class="cardSum">Omat ruoat</summary>
       <div class="row">
         <div class="muted">Lisää omia ruokia, joille määritetään myös yksikkö + grammat.</div>
-        <button class="ghost" id="btnOpenCustom">Lisää oma</button>
+        <button class="ghost" id="btnOpenCustom" onclick="window.RUOKASI_OPEN_CUSTOM&&window.RUOKASI_OPEN_CUSTOM()">Lisää oma</button>
       </div>
       <div id="customList" class="list"></div>
     </details>
