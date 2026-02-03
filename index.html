@@ -130,6 +130,7 @@
       <div class="mealplan" id="mealPlan"></div>
       <div class="row row--tight" style="margin-top:10px">
         <button class="ghost" id="btnSuggest">Päivitä</button>
+        <div class="muted" id="suggestUpdated" style="margin-left:auto">–</div>
       </div>
       <div class="suggest" id="suggestBox">–</div>
     </details>
@@ -139,6 +140,22 @@
   <dialog id="customDlg">
     <form method="dialog" class="modal">
       <h3>Lisää oma ruoka</h3>
+
+      <details class="details" style="margin-top:10px">
+        <summary>Hae Open Food Factsista</summary>
+        <div class="form-grid" style="margin-top:10px">
+          <label>Haku (tuotenimi tai viivakoodi)
+            <input id="offQuery" placeholder="esim. Valio PROfeel / 6408432101234" />
+          </label>
+        </div>
+        <div class="row row--tight" style="margin-top:10px">
+          <button class="ghost" type="button" id="btnOffSearch">Hae</button>
+          <div class="muted" id="offStatus" style="margin-left:auto">–</div>
+        </div>
+        <div id="offResults" class="list" style="margin-top:10px"></div>
+        <p class="hint">Lähde: Open Food Facts (avoin tietokanta). Tarkista arvot, jos tiedoissa on puutteita.</p>
+      </details>
+
       <div class="form-grid">
         <label>Nimi<input id="cfName" required /></label>
         <label>Kalorit / 100g<input id="cfKcal" type="number" required /></label>

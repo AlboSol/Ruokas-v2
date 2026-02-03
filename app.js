@@ -92,6 +92,105 @@ function calcTotals(per100, grams){
   const factor = grams/100;
   return { kcal: round1(per100.kcal*factor), p: round1(per100.p*factor), c: round1(per100.c*factor), f: round1(per100.f*factor) };
 }
+
+async function offFetchJSON(url){
+  const res = await fetch(url, { headers: { "Accept":"application/json" } });
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  return await res.json();
+}
+
+function offToPer100(nutr){
+  // Return {kcal,p,c,f} or null if insufficient
+  const p = Number(nutr.proteins_100g ?? nutr.proteins) || 0;
+  const c = Number(nutr.carbohydrates_100g ?? nutr.carbohydrates) || 0;
+  const f = Number(nutr.fat_100g ?? nutr.fat) || 0;
+
+  // Prefer kcal if present
+  let kcal = Number(nutr["energy-kcal_100g"] ?? nutr["energy-kcal"]) || 0;
+  if(!kcal){
+    const kj = Number(nutr.energy_100g ?? nutr.energy) || 0; // often kJ
+    if(kj) kcal = Math.round(kj / 4.184);
+  }
+  if(!kcal && (p||c||f)){
+    // estimate if only macros
+    kcal = Math.round(p*4 + c*4 + f*9);
+  }
+  if(!kcal && !(p||c||f)) return null;
+  return {kcal, p, c, f};
+}
+
+async function offSearch(query){
+  const q = (query||"").trim();
+  if(!q) return [];
+  const isBarcode = /^[0-9]{8,14}$/.test(q);
+  if(isBarcode){
+    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(q)}.json`;
+    const js = await offFetchJSON(url);
+    if(js && js.status === 1 && js.product){
+      const prod = js.product;
+      const per100 = prod.nutriments ? offToPer100(prod.nutriments) : null;
+      return [{
+        name: prod.product_name || prod.generic_name || q,
+        brands: prod.brands || "",
+        code: prod.code || q,
+        per100,
+        image: prod.image_small_url || ""
+      }];
+    }
+    return [];
+  }else{
+    const url = "https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=10&search_terms=" + encodeURIComponent(q);
+    const js = await offFetchJSON(url);
+    const prods = (js && js.products) ? js.products : [];
+    return prods.slice(0,10).map(p=>({
+      name: p.product_name || p.generic_name || "(nimetön tuote)",
+      brands: p.brands || "",
+      code: p.code || "",
+      per100: p.nutriments ? offToPer100(p.nutriments) : null,
+      image: p.image_small_url || ""
+    }));
+  }
+}
+
+function renderOffResults(items){
+  const box = document.getElementById("offResults");
+  const status = document.getElementById("offStatus");
+  if(!box) return;
+  box.innerHTML = "";
+  if(!items || items.length===0){
+    if(status) status.textContent = "Ei tuloksia";
+    box.innerHTML = `<div class="muted">Ei tuloksia. Kokeile eri hakusanaa tai viivakoodia.</div>`;
+    return;
+  }
+  if(status) status.textContent = `${items.length} tulosta`;
+  items.forEach(it=>{
+    const row = document.createElement("div");
+    row.className = "item offItem";
+    const per = it.per100;
+    const meta = per ? `${Math.round(per.kcal)} kcal / 100g • P ${Math.round(per.p)} • H ${Math.round(per.c)} • R ${Math.round(per.f)}` : "Ravintotiedot puuttuvat osin";
+    row.innerHTML = `
+      <div class="offItem__main">
+        <div class="offItem__title">${it.name}</div>
+        <div class="offItem__meta">${(it.brands||"").trim()}${it.code? " • "+it.code:""}<br>${meta}</div>
+      </div>
+      <button class="ghost" type="button">Käytä</button>
+    `;
+    row.querySelector("button").addEventListener("click", ()=>{
+      // Fill custom food fields
+      document.getElementById("cfName").value = it.name;
+      if(it.per100){
+        document.getElementById("cfKcal").value = Math.round(it.per100.kcal);
+        document.getElementById("cfP").value = Math.round(it.per100.p*10)/10;
+        document.getElementById("cfC").value = Math.round(it.per100.c*10)/10;
+        document.getElementById("cfF").value = Math.round(it.per100.f*10)/10;
+      }
+      const st = document.getElementById("offStatus");
+      if(st) st.textContent = "Valittu";
+    });
+    box.appendChild(row);
+  });
+}
+
 function totalsFromLog(){
   return state.log.reduce((acc,it)=>({kcal:acc.kcal+it.totals.kcal,p:acc.p+it.totals.p,c:acc.c+it.totals.c,f:acc.f+it.totals.f}),{kcal:0,p:0,c:0,f:0});
 }
@@ -304,7 +403,26 @@ function addSelected(){
   });
   selected.clear();
   saveState();
+
+  const offBtn = document.getElementById("btnOffSearch");
+  if(offBtn){
+    offBtn.addEventListener("click", async ()=>{
+      const q = (document.getElementById("offQuery")?.value||"").trim();
+      const st = document.getElementById("offStatus");
+      if(st) st.textContent = "Haetaan…";
+      try{
+        const items = await offSearch(q);
+        renderOffResults(items);
+      }catch(e){
+        if(st) st.textContent = "Virhe";
+        const box = document.getElementById("offResults");
+        if(box) box.innerHTML = `<div class="muted">Haku epäonnistui. Kokeile hetken päästä.</div>`;
+      }
+    });
+  }
+
   renderAll();
+
 }
 function clearSelected(){ selected.clear(); renderPresets(); }
 
@@ -392,7 +510,7 @@ function foodByName(name){
     if(f) return f;
   }
   const cf = (state.customFoods||[]).find(x=>x.name===name);
-  if(cf) return { name: cf.name, per100: cf.per100, unit: cf.unit||"yks", gramsPerUnit: cf.gramsPerUnit||100 };
+  if(cf) return { name: cf.name, per100: cf.per100, unit: cf.unit||"yks", gramsPerUnit: cf.gramsPerUnit||100, maxUnits: cf.maxUnits||8, stepUnits: cf.stepUnits||0.5 };
   return null;
 }
 function scoreMealOption(gaps, totals){
@@ -449,7 +567,37 @@ function computeBestForMeal(meal, gaps){
     const score = scoreMealOption(gaps, totals);
     if(!best || score > best.score) best = { meal, title:o.name, totals, items, score };
   });
+  // Scale the best option to match remaining kcal per enabled meal (within bounds)
+  if(best){
+    const enabledMeals = MEAL_ORDER.filter(mm => state.mealPlan && state.mealPlan[mm]);
+    const mealsLeft = Math.max(1, enabledMeals.length);
+    const target = Math.max(150, Math.min(700, gaps.kcal / mealsLeft)); // kcal target for this meal
+    if(best.totals.kcal > 0){
+      let factor = target / best.totals.kcal;
+      factor = Math.max(0.6, Math.min(1.8, factor)); // keep it reasonable
+      let scaledItems = [];
+      let totals = {kcal:0,p:0,c:0,f:0};
+      for(const it of best.items){
+        const f = foodByName(it.name);
+        if(!f){ scaledItems.push(it); continue; }
+        const step = f.stepUnits || 0.5;
+        const maxU = f.maxUnits || 10;
+        let newU = roundToStep(it.units * factor, step);
+        newU = Math.max(0, Math.min(maxU, newU));
+        const grams = Math.round((f.gramsPerUnit||100) * newU);
+        const t = calcTotals(f.per100, grams);
+        totals = {kcal:totals.kcal+t.kcal,p:totals.p+t.p,c:totals.c+t.c,f:totals.f+t.f};
+        scaledItems.push({name: it.name, units: newU, unit: f.unit||"yks", grams});
+      }
+      best.items = scaledItems;
+      best.totals = totals;
+    }
+  }
   return best;
+}
+function roundToStep(val, step){
+  const s = Number(step||0.5);
+  return Math.round(val/s)*s;
 }
 function applyOptionToGaps(gaps, totals){
   return { kcal:gaps.kcal - totals.kcal, p:gaps.p - totals.p, c:gaps.c - totals.c, f:gaps.f - totals.f };
@@ -459,6 +607,7 @@ function renderAll(){
   updateTop(); renderPresets(); renderCustomList(); renderLog();
   renderMealPlan();
   $("suggestBox").textContent = quickSuggestion();
+  const u=document.getElementById("suggestUpdated"); if(u){ u.textContent = "Päivitetty " + new Date().toLocaleTimeString("fi-FI",{hour:"2-digit",minute:"2-digit"}); }
 }
 
 if("serviceWorker" in navigator){
@@ -468,7 +617,7 @@ window.addEventListener("load", ()=>{
   document.querySelectorAll(".seg__btn").forEach(btn=>btn.addEventListener("click", ()=>setMeal(btn.dataset.meal)));
   $("btnAddSelected").addEventListener("click", addSelected);
   $("btnClearSelected").addEventListener("click", clearSelected);
-  $("btnSuggest").addEventListener("click", ()=> $("suggestBox").textContent = quickSuggestion());
+  $("btnSuggest").addEventListener("click", ()=> { $("suggestBox").textContent = quickSuggestion(); const u=document.getElementById("suggestUpdated"); if(u){ u.textContent = "Päivitetty " + new Date().toLocaleTimeString("fi-FI",{hour:"2-digit",minute:"2-digit"}); } });
   renderMealPlan();
   $("btnOpenCustom").addEventListener("click", openCustomDialog);
   $("btnExport").addEventListener("click", exportData);
