@@ -4,17 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Ruokasi</title>
-
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon.png" />
   <meta name="theme-color" content="#0A84FF" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Ruokasi" />
-
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
   <header class="nav">
     <div class="nav__title">
@@ -76,40 +73,16 @@
       <details class="details">
         <summary>Lisäasetukset</summary>
         <div class="form-grid">
-          <label>
-            Kaloritavoite (max)
-            <input type="number" id="goalMax" min="1200" max="4500" step="10" value="2000" />
-          </label>
-          <label>
-            Kaloritavoite (min)
-            <input type="number" id="goalMin" min="1200" max="4500" step="10" value="1900" />
-          </label>
-          <label>
-            Proteiinitavoite (g)
-            <input type="number" id="goalP" min="50" max="250" step="5" value="140" />
-          </label>
-          <label>
-            Hiilaritavoite (g)
-            <input type="number" id="goalC" min="50" max="350" step="5" value="170" />
-          </label>
-          <label>
-            Rasvatavoite (g)
-            <input type="number" id="goalF" min="30" max="150" step="5" value="70" />
-          </label>
-          <label>
-            Askeleet tänään
-            <input type="number" id="steps" min="0" max="60000" step="100" value="0" />
-          </label>
-          <label>
-            Treeni (kcal, jos tiedossa)
-            <input type="number" id="workoutKcal" min="0" max="2500" step="10" value="0" />
-          </label>
-          <label>
-            Uni (tunnit)
-            <input type="number" id="sleepH" min="0" max="14" step="0.5" value="0" />
-          </label>
+          <label>Kaloritavoite (max)<input type="number" id="goalMax" value="2000" /></label>
+          <label>Kaloritavoite (min)<input type="number" id="goalMin" value="1900" /></label>
+          <label>Proteiinitavoite (g)<input type="number" id="goalP" value="140" /></label>
+          <label>Hiilaritavoite (g)<input type="number" id="goalC" value="170" /></label>
+          <label>Rasvatavoite (g)<input type="number" id="goalF" value="70" /></label>
+          <label>Askeleet tänään<input type="number" id="steps" value="0" /></label>
+          <label>Treeni (kcal)<input type="number" id="workoutKcal" value="0" /></label>
+          <label>Uni (tunnit)<input type="number" id="sleepH" value="0" /></label>
         </div>
-        <p class="hint">Askeleet arvioidaan ~0.04 kcal/askel. Unen perusteella sovellus antaa vain kevyen huomion (ei muuta automaattisesti budjettia).</p>
+        <p class="hint">Askeleet arvioidaan ~0.04 kcal/askel.</p>
       </details>
     </section>
 
@@ -125,10 +98,8 @@
         </div>
       </div>
 
-      <div class="tabs">
-        <div class="tabhint" id="mealHint">Valitse vaihtoehdot ja säädä annoskoot (yksiköt + grammat).</div>
-        <div id="presetList" class="list"></div>
-      </div>
+      <div class="tabhint" id="mealHint">Valitse vaihtoehdot ja säädä annoskoot (yksiköt + grammat).</div>
+      <div id="presetList" class="list"></div>
 
       <div class="row row--tight">
         <button class="primary" id="btnAddSelected">Lisää valitut</button>
@@ -159,22 +130,19 @@
       </div>
       <div class="suggest" id="suggestBox">–</div>
     </section>
-
-    <footer class="footer">
-      <p class="muted">Vinkki: Safari → Jaa → “Lisää Koti-valikkoon”</p>
-    </footer>
   </main>
 
-  <!-- Custom food modal -->
   <dialog id="customDlg">
     <form method="dialog" class="modal">
       <h3>Lisää oma ruoka</h3>
       <div class="form-grid">
-        <label>Nimi<input id="cfName" required placeholder="esim. Hehku 5 dl" /></label>
-        <label>Kalorit<input id="cfKcal" type="number" required min="0" step="1" /></label>
-        <label>Proteiini (g)<input id="cfP" type="number" required min="0" step="0.1" /></label>
-        <label>Hiilarit (g)<input id="cfC" type="number" required min="0" step="0.1" /></label>
-        <label>Rasva (g)<input id="cfF" type="number" required min="0" step="0.1" /></label>
+        <label>Nimi<input id="cfName" required /></label>
+        <label>Kalorit / 100g<input id="cfKcal" type="number" required /></label>
+        <label>Proteiini / 100g<input id="cfP" type="number" required /></label>
+        <label>Hiilarit / 100g<input id="cfC" type="number" required /></label>
+        <label>Rasva / 100g<input id="cfF" type="number" required /></label>
+        <label>Yksikkö<input id="cfUnit" placeholder="viipale, kpl, dl" /></label>
+        <label>g / yksikkö<input id="cfGPU" type="number" placeholder="35" /></label>
       </div>
       <div class="row row--tight">
         <button class="primary" value="ok">Tallenna</button>
