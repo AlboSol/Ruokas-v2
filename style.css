@@ -202,3 +202,27 @@ dialog::backdrop{background: rgba(0,0,0,.35)}
   width:min(520px, 92vw);
   box-shadow: var(--shadow);
 }
+
+
+/* --- Ruokasi v3 usability: bigger sliders + clearer selected amount --- */
+.controls{grid-template-columns: 1fr auto; align-items:center}
+.slider{
+  width:100%;
+  height: 40px;
+  accent-color: var(--blue);
+}
+.qty{
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+.minirow{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:4px;
+}
+.totalsline{
+  font-size: 13px;
+  color: var(--muted);
+}

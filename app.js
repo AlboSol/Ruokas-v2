@@ -46,54 +46,66 @@ let state = loadState();
 let currentMeal = "aamiainen";
 let selected = new Map(); // key -> {food, grams}
 
+
 const presets = {
   aamiainen: [
-    food("Puuro (kaurahiutaleet)", 380, 13, 60, 7),      // per 100g oats-ish
-    food("Maustamaton rahka", 67, 12, 3.5, 0.2),
-    food("Marjat", 50, 1, 12, 0.2),
-    food("Kananmuna", 155, 13, 1.1, 11),
-    food("Ruisleipä", 220, 6, 40, 3),
-    food("Juusto 15%", 280, 27, 0, 15),
-    food("Maapähkinävoi", 600, 25, 20, 50),
-    food("Voi", 717, 1, 0, 81),
-    food("Mehu", 45, 0.5, 10, 0),
-    food("Maitokahvi", 45, 3, 4, 2),
+    foodU("Puuro (kaurahiutaleet)", 380, 13, 60, 7, "dl hiutaleita", 40, 6, 0.25),
+    foodU("Maustamaton rahka", 67, 12, 3.5, 0.2, "purkki", 200, 2, 0.25),
+    foodU("Marjat", 50, 1, 12, 0.2, "dl", 60, 6, 0.5),
+    foodU("Kananmuna", 155, 13, 1.1, 11, "kpl", 55, 6, 0.5),
+    foodU("Ruisleipä", 220, 6, 40, 3, "viipale", 35, 6, 0.5),
+    foodU("Paahtoleipä", 265, 8, 49, 3.5, "viipale", 30, 6, 0.5),
+    foodU("Juusto 15%", 280, 27, 0, 15, "viipale", 10, 8, 0.5),
+    foodU("Kinkku / leikkele", 110, 20, 2, 2, "siivu", 8, 8, 0.5),
+    foodU("Maapähkinävoi", 600, 25, 20, 50, "rkl", 15, 6, 0.5),
+    foodU("Voi", 717, 1, 0, 81, "rkl", 14, 4, 0.5),
+    foodU("Mehu", 45, 0.5, 10, 0, "dl", 100, 6, 0.5),
+    foodU("Kahvimaito", 50, 3, 4, 2, "rkl", 15, 6, 0.5)
   ],
   lounas: [
-    food("Kanafile", 110, 23, 0, 2),
-    food("Riisi (keitetty)", 130, 2.4, 28, 0.3),
-    food("Peruna", 77, 2, 17, 0.1),
-    food("Kasvikset", 30, 2, 5, 0.2),
-    food("Öljy", 884, 0, 0, 100),
-    food("Ruisleipä", 220, 6, 40, 3),
+    foodU("Kanafile", 110, 23, 0, 2, "file", 120, 4, 0.25),
+    foodU("Riisi (keitetty)", 130, 2.4, 28, 0.3, "dl", 70, 6, 0.5),
+    foodU("Peruna", 77, 2, 17, 0.1, "kpl", 80, 6, 0.5),
+    foodU("Kasvikset", 30, 2, 5, 0.2, "annos", 250, 3, 0.25),
+    foodU("Öljy", 884, 0, 0, 100, "tl", 5, 10, 0.5),
+    foodU("Ruisleipä", 220, 6, 40, 3, "viipale", 35, 6, 0.5)
   ],
   "välipala": [
-    food("Rahka", 67, 12, 3.5, 0.2),
-    food("Marjat", 50, 1, 12, 0.2),
-    food("Banaani", 89, 1.1, 23, 0.3),
-    food("Pähkinät", 620, 18, 14, 55),
-    food("Proteiinijuoma", 60, 10, 4, 1),
+    foodU("Rahka", 67, 12, 3.5, 0.2, "purkki", 200, 2, 0.25),
+    foodU("Marjat", 50, 1, 12, 0.2, "dl", 60, 6, 0.5),
+    foodU("Banaani", 89, 1.1, 23, 0.3, "kpl", 120, 3, 0.5),
+    foodU("Pähkinät", 620, 18, 14, 55, "kourallinen", 30, 6, 0.5),
+    foodU("Proteiinijuoma", 60, 10, 4, 1, "pullo", 250, 2, 0.25)
   ],
   "päivällinen": [
-    food("Kanafile", 110, 23, 0, 2),
-    food("Lohi", 200, 20, 0, 13),
-    food("Jauheliha 10%", 176, 20, 0, 10),
-    food("Kasvikset", 30, 2, 5, 0.2),
-    food("Riisi (keitetty)", 130, 2.4, 28, 0.3),
-    food("Peruna", 77, 2, 17, 0.1),
-    food("Öljy", 884, 0, 0, 100),
-    food("Ruisleipä", 220, 6, 40, 3),
+    foodU("Kanafile", 110, 23, 0, 2, "file", 120, 4, 0.25),
+    foodU("Lohi", 200, 20, 0, 13, "file", 150, 3, 0.25),
+    foodU("Jauheliha 10%", 176, 20, 0, 10, "annos", 150, 4, 0.25),
+    foodU("Kasvikset", 30, 2, 5, 0.2, "annos", 250, 3, 0.25),
+    foodU("Riisi (keitetty)", 130, 2.4, 28, 0.3, "dl", 70, 6, 0.5),
+    foodU("Peruna", 77, 2, 17, 0.1, "kpl", 80, 6, 0.5),
+    foodU("Öljy", 884, 0, 0, 100, "tl", 5, 10, 0.5),
+    foodU("Ruisleipä", 220, 6, 40, 3, "viipale", 35, 6, 0.5),
+    foodU("Kukkakaali", 25, 2, 3, 0.2, "kukkosiivu", 25, 10, 1)
   ],
   iltapala: [
-    food("Ruisleipä", 220, 6, 40, 3),
-    food("Juusto 15%", 280, 27, 0, 15),
-    food("Rahka", 67, 12, 3.5, 0.2),
-    food("Marjat", 50, 1, 12, 0.2),
-    food("Kananmuna", 155, 13, 1.1, 11),
+    foodU("Ruisleipä", 220, 6, 40, 3, "viipale", 35, 6, 0.5),
+    foodU("Paahtoleipä", 265, 8, 49, 3.5, "viipale", 30, 6, 0.5),
+    foodU("Juusto 15%", 280, 27, 0, 15, "viipale", 10, 8, 0.5),
+    foodU("Rahka", 67, 12, 3.5, 0.2, "purkki", 200, 2, 0.25),
+    foodU("Marjat", 50, 1, 12, 0.2, "dl", 60, 6, 0.5),
+    foodU("Kananmuna", 155, 13, 1.1, 11, "kpl", 55, 6, 0.5)
   ]
 };
 
 function food(name, kcal, p, c, f){
+  return { name, per100: {kcal, p, c, f} };
+}
+
+function foodU(name, kcal, p, c, f, unit, gramsPerUnit, maxUnits=6, stepUnits=0.5){
+  return { name, per100: {kcal, p, c, f}, unit, gramsPerUnit, maxUnits, stepUnits };
+}
+(name, kcal, p, c, f){
   return { name, per100: {kcal, p, c, f} };
 }
 
@@ -164,13 +176,23 @@ function renderPresets(){
 
     const controls = document.createElement("div");
     controls.className = "controls";
+
+    const unit = f.unit || "g";
+    const gramsPerUnit = Number(f.gramsPerUnit || 1);
+    const maxUnits = Number(f.maxUnits || 6);
+    const stepUnits = Number(f.stepUnits || 0.5);
+
     controls.innerHTML = `
-      <input class="slider" type="range" min="0" max="300" step="5" value="0" aria-label="grams" />
-      <div class="small"><span class="g">0</span> g</div>
-      <div class="small"><span class="k">0</span> kcal • P <span class="p">0</span> • H <span class="c">0</span> • R <span class="f">0</span></div>
+      <input class="slider" type="range" min="0" max="${maxUnits}" step="${stepUnits}" value="0" aria-label="units" />
+      <div class="minirow">
+        <div class="qty"><span class="u">0</span> ${unit}</div>
+        <div class="totalsline"><span class="g">0</span> g</div>
+      </div>
+      <div class="totalsline"><span class="k">0</span> kcal • P <span class="p">0</span> • H <span class="c">0</span> • R <span class="f">0</span></div>
     `;
 
     const slider = controls.querySelector("input");
+    const uEl = controls.querySelector(".u");
     const gEl = controls.querySelector(".g");
     const kEl = controls.querySelector(".k");
     const pEl = controls.querySelector(".p");
@@ -178,10 +200,14 @@ function renderPresets(){
     const fEl = controls.querySelector(".f");
 
     slider.addEventListener("input", () => {
-      const grams = Number(slider.value);
+      const units = Number(slider.value);
+      const grams = Math.round(units * gramsPerUnit);
+      uEl.textContent = units % 1 === 0 ? String(units) : String(units);
       gEl.textContent = grams;
+
       const t = calcTotals(f.per100, grams);
       kEl.textContent = t.kcal; pEl.textContent = t.p; cEl.textContent = t.c; fEl.textContent = t.f;
+
       if(grams > 0) selected.set(key, { food: f, grams, totals: t });
       else selected.delete(key);
     });
