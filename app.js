@@ -170,8 +170,6 @@ function renderPresets(){
     }
     controls.querySelector('[data-act="dec"]').addEventListener("click", ()=> setUnits(units - stepU));
     controls.querySelector('[data-act="inc"]').addEventListener("click", ()=> setUnits(units + stepU));
-else selected.delete(key);
-    });
 
     row.appendChild(top);
     row.appendChild(controls);
@@ -295,8 +293,7 @@ function quickSuggestion(){
     out.push("Huom: proteiinia puuttuu – priorisoi kana/rahka/proteiinijuoma.");
   }
 
-  return out.join("
-");
+  return out.join("\n");
 }
 function addSelected(){
   if(selected.size===0) return;
