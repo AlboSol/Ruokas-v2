@@ -1,12 +1,13 @@
 
 /* Ruokasi v3.3.0.0 */
-const VERSION = "v3.3.1.0";
+const VERSION = "v3.3.0.0";
 const STORAGE_KEY = "ruokasi.saved";
-const MEAL_ORDER = ["aamiainen","lounas","välipala","päivällinen","iltapala","juomat","jälkiruoka"];
+const DRAFT_KEY = "ruokasi.draft";
+const MEAL_ORDER = ["aamiainen","lounas","välipala","päivällinen","iltapala"];
 const MEAL_LABEL = {
-  aamiainen:"Aamiainen", lounas:"Lounas", "välipala":"Välipala", "päivällinen":"Päivällinen", iltapala:"Iltapala", juomat:"Juomat", jälkiruoka:"Jälkiruoat"
+  aamiainen:"Aamiainen", lounas:"Lounas", "välipala":"Välipala", "päivällinen":"Päivällinen", iltapala:"Iltapala"
 };
-const MEAL_COLORS = {"aamiainen": "#2563EB", "lounas": "#16A34A", "päivällinen": "#F97316", "välipala": "#7C3AED", "iltapala": "#0D9488", "juomat":"#06B6D4", "jälkiruoka":"#EC4899", "muut": "#64748B"};
+const MEAL_COLORS = {"aamiainen": "#2563EB", "lounas": "#16A34A", "päivällinen": "#F97316", "välipala": "#7C3AED", "iltapala": "#0D9488", "muut": "#64748B"};
 
 function $(id){ return document.getElementById(id); }
 function todayKey(d){ d=d||new Date(); const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); return x.toISOString().slice(0,10); }
@@ -76,9 +77,9 @@ function defaultState(){
     selectedDay: todayKey(),
     goals: { p:140, c:170, f:70 },
     target: { baseKcal:2000, workoutKcal:0, stepGoal:0, sleepH:0 },
-    products: { custom: [], meta: {} },
+    products: { custom: [] },
     days: {}, // iso -> { entries: [] }
-    suggest: { alt:0, mealPlan: null }
+    suggest: { alt:0 }
   };
 }
 function ensureDay(s, iso){ if(!s.days) s.days={}; if(!s.days[iso]) s.days[iso]={entries:[]}; }
@@ -88,10 +89,10 @@ function loadState(){
   if(!raw){ const s=defaultState(); ensureDay(s,s.selectedDay); return s; }
   try {
     const s=JSON.parse(raw);
-    s.selectedDay=todayKey();
+    if(!s.selectedDay) s.selectedDay=todayKey();
     if(!s.days) s.days={};
     ensureDay(s,s.selectedDay);
-    if(!s.products) s.products={custom:[],meta:{}}; if(!s.products.meta) s.products.meta={};
+    if(!s.products) s.products={custom:[]};
     if(!s.target) s.target={ baseKcal:2000, workoutKcal:0, stepGoal:0, sleepH:0 };
     if(!s.goals) s.goals={ p:140, c:170, f:70 };
     return s;
@@ -101,6 +102,7 @@ function loadState(){
 }
 
 let state = loadState();
+let dirty = false;
 let pendingDay = null;
 let currentMeal = "aamiainen";
 let lastSuggestion = null;
@@ -109,28 +111,18 @@ function dayEntries(){ ensureDay(state,state.selectedDay); return state.days[sta
 
 function computeTargetKcal(){ return Math.round((+state.target.baseKcal||0) + (+state.target.workoutKcal||0) + (+state.target.stepGoal||0)*0.04); }
 
-function markDirty(){ false=true; updateSaveBtn(); try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
-function saveAll(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); localStorage.removeItem(STORAGE_KEY); false=false; updateSaveBtn(); }
-function discardAndReload(){ state=loadState(); false=false; updateSaveBtn(); renderAll(); }
+function markDirty(){ dirty=true; updateSaveBtn(); try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(state)); }catch(e){} }
+function saveAll(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); localStorage.removeItem(DRAFT_KEY); dirty=false; updateSaveBtn(); }
+function discardAndReload(){ state=loadState(); dirty=false; updateSaveBtn(); renderAll(); }
 
-function allProducts(){
+function allProducts(){ 
   const out=[];
   MEAL_ORDER.forEach(meal=>{
     (presets[meal]||[]).forEach((p,i)=>{
-      const pid="preset:"+meal+":"+i;
-      const base={ id:pid, name:p.name, per100:p.per100, unit:p.unit, gramsPerUnit:p.gramsPerUnit, category:meal, isPreset:true };
-      const merged=applyOverride(base,pid);
-      if(merged) out.push(merged);
+      out.push({ id:"preset:"+meal+":"+i, name:p.name, per100:p.per100, unit:p.unit, gramsPerUnit:p.gramsPerUnit, category:meal, isPreset:true });
     });
   });
-  (state.products.custom||[]).forEach(p=>{
-    const pid=p.id;
-    const base=Object.assign({isPreset:false},p);
-    const m=metaFor(pid);
-    base.isFavorite = !!m.favorite || !!p.isFavorite;
-    base.usage = m.usage||0;
-    if(!m.hidden) out.push(base);
-  });
+  (state.products.custom||[]).forEach(p=>out.push(Object.assign({isPreset:false},p)));
   return out;
 }
 function findProduct(pid){
@@ -138,14 +130,9 @@ function findProduct(pid){
     const parts=pid.split(":");
     const meal=parts[1]; const idx=+parts[2];
     const p=(presets[meal]||[])[idx]; if(!p) return null;
-    const base={ id:pid, name:p.name, per100:p.per100, unit:p.unit, gramsPerUnit:p.gramsPerUnit, category:meal, isPreset:true };
-    return applyOverride(base,pid);
+    return { id:pid, name:p.name, per100:p.per100, unit:p.unit, gramsPerUnit:p.gramsPerUnit, category:meal, isPreset:true };
   }
-  const p=(state.products.custom||[]).find(x=>x.id===pid) || null;
-  if(!p) return null;
-  const m=metaFor(pid);
-  if(m.hidden) return null;
-  return Object.assign({}, p, { isPreset:false, isFavorite: !!m.favorite || !!p.isFavorite, usage: m.usage||0 });
+  return (state.products.custom||[]).find(x=>x.id===pid) || null;
 }
 
 function getEntry(meal, pid){ return dayEntries().find(e=>e.meal===meal && e.productId===pid) || null; }
@@ -160,7 +147,6 @@ function setEntry(meal, pid, units){
   const entry={ id:(idx>=0?entries[idx].id:crypto.randomUUID()), productId:pid, meal:meal, name:prod.name, per100:per100, unit:prod.unit, gramsPerUnit:prod.gramsPerUnit, units:units, grams:grams, totals:totals };
   if(idx>=0) entries[idx]=entry; else entries.push(entry);
   if(!prod.isPreset){ const c=state.products.custom.find(x=>x.id===pid); if(c && c.isNew) c.isNew=false; }
-  const m=metaFor(pid); if(m && units>0){ m.usage = (m.usage||0) + 1; }
   markDirty();
 }
 
@@ -184,7 +170,11 @@ function updateHeader(){
   $("dayTitle").textContent = isToday ? "Tänään" : "Päivä";
   $("todayLabel").textContent = fmtFiDate(state.selectedDay);
 }
-function updateSaveBtn(){ const b=$("btnSaveOk"); if(!b) return; b.textContent="OK"; b.classList.add("is-clean"); }
+function updateSaveBtn(){
+  const b=$("btnSaveOk");
+  if(dirty){ b.textContent="Tallenna"; b.classList.add("is-dirty"); b.classList.remove("is-clean"); }
+  else { b.textContent="OK"; b.classList.remove("is-dirty"); b.classList.add("is-clean"); }
+}
 
 function renderTop(){
   const target=computeTargetKcal();
@@ -249,14 +239,8 @@ function renderMacroBars(by){
 function renderProductList(){
   const list=$("productList");
   list.innerHTML="";
-  const prods = allProducts().filter(p=>(p.category||"aamiainen")===meal);
-  prods.sort((a,b)=>{
-    const af=!!a.isFavorite, bf=!!b.isFavorite;
-    if(af!==bf) return bf-af;
-    const au=a.usage||0, bu=b.usage||0;
-    if(au!==bu) return bu-au;
-    return a.name.localeCompare(b.name,"fi");
-  });
+  const prods = allProducts().filter(p=>(p.category||"aamiainen")===currentMeal);
+  prods.sort((a,b)=>a.name.localeCompare(b.name,"fi"));
   prods.forEach(p=>{
     const row=document.createElement("div");
     row.className="listRow";
@@ -265,21 +249,15 @@ function renderProductList(){
     const star=document.createElement("div");
     star.className="star";
     star.style.width="16px";
-    star.textContent = (p.isNew) ? "⭐" : "";
+    star.textContent = (!p.isPreset && p.isNew) ? "⭐" : "";
 
-    const heart=document.createElement("button");
-    heart.type="button";
-    heart.className="heartBtn";
-    heart.textContent = p.isFavorite ? "❤️" : "🤍";
-    heart.addEventListener("click", function(ev){
-      ev.stopPropagation();
-      const m=metaFor(p.id);
-      m.favorite = !m.favorite;
-      markDirty();
-      renderProductList();
-      renderMealPlan();
-  computeSuggestion(true);
-    });
+    const heart=document.createElement("div");
+    heart.className="heart";
+    if(p.isPreset){ heart.textContent="🤍"; heart.style.opacity="0"; }
+    else {
+      heart.textContent = p.isFavorite ? "❤️" : "🤍";
+      heart.addEventListener("click", function(ev){ ev.stopPropagation(); p.isFavorite=!p.isFavorite; markDirty(); renderProductList(); computeSuggestion(true); });
+    }
 
     const main=document.createElement("div");
     main.className="rowMain";
@@ -292,12 +270,10 @@ function renderProductList(){
   });
 }
 
-
 /* Product modal */
-let pm={pid:null, units:1, entryMeal:null};
+let pm={pid:null, units:1};
 function openProductModal(pid){
   pm.pid=pid;
-  pm.entryMeal=currentMeal;
   const e=getEntry(currentMeal,pid);
   pm.units = e ? e.units : 1;
   const prod=findProduct(pid);
@@ -333,37 +309,7 @@ function renderProductModalBody(){
 
 function flashRow(pid){ const row=document.querySelector('.listRow[data-pid="'+pid+'"]'); if(!row) return; row.classList.add("is-flash"); setTimeout(()=>row.classList.remove("is-flash"), 500); }
 
-
-function confirmYesNo(text, title, onYes){
-  $("cmTitle").textContent = title || "Vahvista";
-  $("cmText").textContent = text || "–";
-  show("confirmModal");
-  const cleanup=()=>{
-    $("btnCmYes").onclick=null; $("btnCmNo").onclick=null; $("btnCmClose").onclick=null;
-    hide("confirmModal");
-  };
-  $("btnCmYes").onclick=function(){ cleanup(); onYes && onYes(); };
-  $("btnCmNo").onclick=cleanup;
-  $("btnCmClose").onclick=cleanup;
-}
-
-function deleteProduct(pid){
-  if(pid.startsWith("preset:")){
-    const m=metaFor(pid);
-    m.hidden=true;
-    m.favorite=false;
-    m.override=null;
-    markDirty();
-    return;
-  }
-  const idx=(state.products.custom||[]).findIndex(x=>x.id===pid);
-  if(idx>=0) state.products.custom.splice(idx,1);
-  const m=metaFor(pid);
-  m.hidden=true; m.favorite=false;
-  markDirty();
-}
-
- /* Modals */
+/* Modals */
 function show(id){ $(id).classList.remove("is-hidden"); }
 function hide(id){ $(id).classList.add("is-hidden"); }
 
@@ -389,7 +335,6 @@ function saveGoal(){
   markDirty();
   hide("goalModal");
   renderTop();
-  renderMealPlan();
   computeSuggestion(true);
 }
 
@@ -399,14 +344,22 @@ function openDate(){
   $("datePick").onchange = function(){ requestDaySwitch($("datePick").value); };
   show("dateModal");
 }
-function requestDaySwitch(nextDay){ if(!nextDay || nextDay===state.selectedDay){ hide("dateModal"); return; } switchDay(nextDay); }
+function requestDaySwitch(nextDay){
+  if(!nextDay || nextDay===state.selectedDay){ hide("dateModal"); return; }
+  if(dirty){
+    pendingDay=nextDay;
+    $("spDay").textContent="Päivä: "+fmtFiDate(state.selectedDay);
+    show("savePrompt");
+  } else {
+    switchDay(nextDay);
+  }
+}
 function switchDay(nextDay){
   hide("dateModal");
   state.selectedDay=nextDay;
   ensureDay(state,nextDay);
   updateHeader();
   renderAll();
-  renderMealPlan();
   computeSuggestion(true);
 }
 
@@ -454,7 +407,7 @@ function openAddProduct(editId){
   $("offResults").innerHTML=""; $("offStatus").textContent="–";
   $("offQuery").value="";
   if(editId){
-    const p=findProduct(editId);
+    const p=state.products.custom.find(x=>x.id===editId);
     if(p){
       $("cfName").value=p.name||"";
       $("cfCat").value=p.category||currentMeal;
@@ -476,14 +429,13 @@ function openAddProduct(editId){
 async function offSearch(){
   const q=$("offQuery").value.trim(); if(!q) return;
   $("offStatus").textContent="Haetaan…"; $("offResults").innerHTML="";
-  const btn=$("btnOffSearch"); if(btn){ btn.disabled=true; btn.textContent="Haetaan…"; }
   try {
     const url = /^\d{8,14}$/.test(q)
       ? "https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(q)+".json"
       : "https://world.openfoodfacts.org/cgi/search.pl?search_terms="+encodeURIComponent(q)+"&search_simple=1&action=process&json=1&page_size=8";
     const res=await fetch(url); const data=await res.json();
     const prods = data.product ? [data.product] : (data.products||[]);
-    if(!prods.length){ $("offStatus").textContent="Ei tuloksia"; $("offResults").innerHTML='<div class="muted">Ei tuloksia. Kokeile eri hakusanaa tai viivakoodia.</div>'; if(btn){btn.disabled=false;btn.textContent="Hae";} return; }
+    if(!prods.length){ $("offStatus").textContent="Ei tuloksia"; return; }
     $("offStatus").textContent=prods.length+" tulosta";
     prods.forEach(p=>{
       const name = p.product_name || p.generic_name || "(nimetön)";
@@ -507,14 +459,12 @@ async function offSearch(){
     });
   } catch(e) {
     $("offStatus").textContent="Virhe haussa";
-  } finally { if(btn){ btn.disabled=false; btn.textContent="Hae"; } }
-
+  }
 }
 function saveCustom(){
   const name=$("cfName").value.trim(); if(!name) return;
   const editId=$("customModal").dataset.editId;
-  const category=($("cfCat").value||currentMeal);
-  const obj={ id: editId||crypto.randomUUID(), name:name, category:category, ean:$("cfEan").value.trim(),
+  const obj={ id: editId||crypto.randomUUID(), name:name, category:($("cfCat").value.trim()||currentMeal), ean:$("cfEan").value.trim(),
     per100:{ kcal:+($("cfKcal").value||0), p:+($("cfP").value||0), c:+($("cfC").value||0), f:+($("cfF").value||0) },
     unit:($("cfUnit").value.trim()||"yks"),
     gramsPerUnit:+($("cfGPU").value||100),
@@ -522,66 +472,20 @@ function saveCustom(){
     isNew: editId? false:true
   };
   if(editId){
-    if(editId.startsWith("preset:")){
-      const m=metaFor(editId);
-      m.override = { name: obj.name, category: obj.category, ean: obj.ean, per100: obj.per100, unit: obj.unit, gramsPerUnit: obj.gramsPerUnit };
-      m.hidden = false;
-    } else {
-      const i=state.products.custom.findIndex(x=>x.id===editId);
-      if(i>=0) state.products.custom[i]=Object.assign(state.products.custom[i], obj);
-    }
+    const i=state.products.custom.findIndex(x=>x.id===editId);
+    if(i>=0) state.products.custom[i]=Object.assign(state.products.custom[i], obj);
   } else {
     state.products.custom.unshift(obj);
-    const m=metaFor(obj.id); m.hidden=false;
   }
   markDirty();
   hide("customModal");
   renderProductList();
-  renderMealPlan();
   computeSuggestion(true);
 }
 
-
-/* Suggestions */
-function initMealPlan(){
-  if(!state.suggest.mealPlan){
-    state.suggest.mealPlan={};
-    MEAL_ORDER.forEach(m=>state.suggest.mealPlan[m]= (["juomat","jälkiruoka"].includes(m) ? false : true));
-  }
-}
-function renderMealPlan(){
-  initMealPlan();
-  const box=$("mealPlan"); if(!box) return;
-  box.innerHTML="";
-  MEAL_ORDER.forEach(meal=>{
-    if(["juomat","jälkiruoka"].includes(meal)) return; // keep UI focused on meals
-    const lab=document.createElement("label");
-    lab.className="mealchip";
-    lab.innerHTML = '<input type="checkbox" '+(state.suggest.mealPlan[meal]?'checked':'')+' /> <span>'+MEAL_LABEL[meal]+'</span>';
-    lab.querySelector("input").addEventListener("change",(ev)=>{
-      state.suggest.mealPlan[meal]=ev.target.checked;
-      markDirty();
-      renderMealPlan();
-  computeSuggestion(true);
-    });
-    box.appendChild(lab);
-  });
-}
-function pickSuggestMeal(){
-  initMealPlan();
-  const start=MEAL_ORDER.indexOf(currentMeal);
-  for(let k=0;k<MEAL_ORDER.length;k++){
-    const m=MEAL_ORDER[(start+k)%MEAL_ORDER.length];
-    if(state.suggest.mealPlan[m]) return m;
-  }
-  return currentMeal;
-}
-
-/* Suggestions */
+/* Suggestions (simple) */
 function computeSuggestion(resetAlt){
-  initMealPlan();
   if(resetAlt) state.suggest.alt=0;
-  const meal = pickSuggestMeal();
   const t=dayTotals().sum;
   const targetK=computeTargetKcal();
   const needK=targetK - t.kcal;
@@ -589,7 +493,7 @@ function computeSuggestion(resetAlt){
   const needC=(+state.goals.c||0) - t.c;
   const needF=(+state.goals.f||0) - t.f;
 
-  const prods = allProducts().filter(p=>(p.category||"aamiainen")===meal);
+  const prods = allProducts().filter(p=>(p.category||"aamiainen")===currentMeal);
   let scored = prods.map(p=>{
     const grams=+p.gramsPerUnit||0;
     const per100=p.per100||{kcal:0,p:0,c:0,f:0};
@@ -602,14 +506,14 @@ function computeSuggestion(resetAlt){
     if(needC>5) score += Math.min(C,needC)*2;
     if(needK>50) score += Math.min(kcal,needK)*0.01;
     if(needF<0 && F>2) score -= F*2;
-    if(p.isFavorite) score += 30;
+    if(!p.isPreset && p.isFavorite) score += 30;
     return {p:p,kcal:kcal,P:P,C:C,F:F,score:score};
   });
   scored.sort((a,b)=>b.score-a.score);
   const alt=state.suggest.alt||0;
   const picked = scored.slice(alt, alt+3).filter(x=>x.score>0.1);
   if(!picked.length){ $("suggestBox").innerHTML='<div class="muted">Hyvä! Päivä on tasapainossa.</div>'; lastSuggestion=null; return; }
-  lastSuggestion={ meal:meal, items:picked.map(x=>({productId:x.p.id, units:1})), totals:{kcal:picked.reduce((s,x)=>s+x.kcal,0), p:picked.reduce((s,x)=>s+x.P,0), c:picked.reduce((s,x)=>s+x.C,0), f:picked.reduce((s,x)=>s+x.F,0)}, why:[] };
+  lastSuggestion={ meal:currentMeal, items:picked.map(x=>({productId:x.p.id, units:1})), totals:{kcal:picked.reduce((s,x)=>s+x.kcal,0), p:picked.reduce((s,x)=>s+x.P,0), c:picked.reduce((s,x)=>s+x.C,0), f:picked.reduce((s,x)=>s+x.F,0)}, why:[] };
   const why=[];
   if(needP>10) why.push("Painottaa proteiinia (puuttuu "+Math.round(needP)+" g)");
   if(needC>10) why.push("Tasaa hiilareita (puuttuu "+Math.round(needC)+" g)");
@@ -643,9 +547,8 @@ function applySuggestion(){
   });
   renderTop();
   renderProductList();
-  renderMealPlan();
   computeSuggestion(true);
-
+  dirty=true; updateSaveBtn();
 }
 
 /* Wire up */
@@ -654,7 +557,6 @@ function renderAll(){
   updateSaveBtn();
   renderTop();
   renderProductList();
-  renderMealPlan();
   computeSuggestion(true);
 }
 
@@ -668,12 +570,11 @@ document.addEventListener("DOMContentLoaded", function(){
       currentMeal=btn.dataset.meal;
       document.querySelectorAll("#mealSeg .seg__btn").forEach(b=>b.classList.toggle("is-on", b.dataset.meal===currentMeal));
       renderProductList();
-      renderMealPlan();
-  computeSuggestion(true);
+      computeSuggestion(true);
     });
   });
 
-  $("btnSaveOk").onclick=function(){ /* autosave */ };
+  $("btnSaveOk").onclick=function(){ if(dirty) saveAll(); };
   $("btnGoal").onclick=openGoal;
   $("btnGoalClose").onclick=function(){ hide("goalModal"); };
   $("btnGoalCancel").onclick=function(){ hide("goalModal"); };
@@ -683,14 +584,18 @@ document.addEventListener("DOMContentLoaded", function(){
   $("btnDateClose").onclick=function(){ hide("dateModal"); };
   $("btnToday").onclick=function(){ requestDaySwitch(todayKey()); };
 
+  $("btnSpClose").onclick=function(){ hide("savePrompt"); pendingDay=null; };
+  $("btnSpCancel").onclick=function(){ hide("savePrompt"); pendingDay=null; };
+  $("btnSpSave").onclick=function(){ saveAll(); const d=pendingDay; pendingDay=null; hide("savePrompt"); if(d) switchDay(d); };
+  $("btnSpDiscard").onclick=function(){ const d=pendingDay; pendingDay=null; hide("savePrompt"); discardAndReload(); if(d) switchDay(d); };
+
   $("btnDayMeals").onclick=openDayMeals;
   $("btnDmClose").onclick=function(){ hide("dayMealsModal"); };
   $("ringClick").onclick=openDayMeals;
 
   $("btnPmClose").onclick=function(){ hide("productModal"); };
   $("btnPmCancel").onclick=function(){ hide("productModal"); };
-  $("btnPmApply").onclick=function(){ setEntry(pm.entryMeal, pm.pid, pm.units); hide("productModal"); flashRow(pm.pid); renderTop(); computeSuggestion(true); };
-  $("btnPmTrash").onclick=function(){ const has=!!getEntry(pm.entryMeal, pm.pid); if(!has) return; confirmYesNo("Poistetaanko tämä syödyistä?","Poista", ()=>{ setEntry(pm.entryMeal, pm.pid, 0); hide("productModal"); renderTop(); computeSuggestion(true); renderProductList(); }); };
+  $("btnPmApply").onclick=function(){ setEntry(currentMeal, pm.pid, pm.units); hide("productModal"); flashRow(pm.pid); renderTop(); computeSuggestion(true); };
 
   $("btnAddProduct").onclick=function(){ openAddProduct(""); };
   $("btnCloseCustom").onclick=function(){ hide("customModal"); };
