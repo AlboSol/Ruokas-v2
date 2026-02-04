@@ -19,92 +19,79 @@
       <div>
         <h1>Ruokasi</h1>
         <div class="badge" id="versionBadge">–</div>
-        <p class="sub">1900–2000 kcal / päivä • v3.3.0.0</p>
       </div>
     </div>
-    <div class="row row--tight" style="gap:8px">
-      <button class="ghost" id="btnCalendar" title="Vaihda päivä" aria-label="Vaihda päivä">
-        📅
-      </button>
-      <button class="ghost" id="btnReset" title="Nollaa päivän kirjaukset">Nollaa</button>
+
+    <div class="nav__actions">
+      <button class="ghost iconbtn" id="btnDate" title="Valitse päivä" aria-label="Valitse päivä">📅</button>
+      <button class="primary okbtn" id="btnSaveOk" title="Tallenna / OK">OK</button>
     </div>
   </header>
 
   <main class="container">
 
-    <section class="card" id="secToday">
+    <section class="card" id="topCard">
       <div class="row">
         <div>
-          <h2>Syöty tänään</h2>
+          <h2 id="dayTitle">Tänään</h2>
           <p class="muted" id="todayLabel">–</p>
         </div>
-        <div class="pill" id="statusPill">OK</div>
       </div>
 
-      <div class="kpi-ring">
-        <div class="ring" id="mealRing" role="button" tabindex="0" aria-label="Aterioiden jakauma"></div>
-        <div class="kpi-center">
-          <div class="kpi__label">Kalorit</div>
-          <div class="kpi__value"><span id="kcalEaten">0</span><span class="unit">kcal</span></div>
-          <div class="muted" style="font-size:12px">Jäljellä <span id="kcalLeft">0</span> kcal</div>
+      <div class="topViz">
+        <div class="ringWrap" id="ringClick" role="button" tabindex="0" aria-label="Avaa erittely">
+          <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring__bg" cx="60" cy="60" r="46"></circle>
+            <g id="ringSegs"></g>
+          </svg>
+          <div class="ringCenter">
+            <div class="ringKcal"><span id="kcalEaten">0</span></div>
+            <div class="ringUnit">kcal</div>
+          </div>
         </div>
-      </div>
 
-      <div class="kpi-grid" style="margin-top:12px">
-        <div class="kpi">
-          <div class="kpi__label">Arvioitu kulutus</div>
-          <div class="kpi__value"><span id="kcalBurn">0</span><span class="unit">kcal</span></div>
-        </div>
-        <div class="kpi">
-          <div class="kpi__label">Päivä</div>
-          <div class="kpi__value" style="font-size:18px"><span id="dayPretty">–</span></div>
-        </div>
-        <div class="kpi">
-          <div class="kpi__label">Tila</div>
-          <div class="kpi__value" style="font-size:18px"><span id="dayState">Tallennettu</span></div>
+        <div class="remainBox">
+          <div class="remainLabel">Jäljellä</div>
+          <div class="remainValue"><span id="kcalLeft">0</span> kcal</div>
+          <button class="ghost linklike" id="btnDayMeals" type="button">Päivän syömiset</button>
         </div>
       </div>
 
-      <div class="macro-grid">
+      <div class="kpi-grid kpi-grid--2">
+        <button class="kpi kpi--btn" id="btnGoal" type="button" aria-label="Päivän tavoite">
+          <div class="kpi__label">Päivän tavoite</div>
+          <div class="kpi__value"><span id="kcalTarget">0</span><span class="unit">kcal</span></div>
+        </button>
+        <div class="kpi">
+          <div class="kpi__label">Syöty</div>
+          <div class="kpi__value"><span id="kcalEatenKpi">0</span><span class="unit">kcal</span></div>
+        </div>
+      </div>
+
+      <div class="macro-grid" id="macroGrid">
         <div class="macro">
           <div class="macro__top">
             <span>Proteiini</span><span class="muted"><span id="pNow">0</span> / <span id="pGoal">140</span> g</span>
           </div>
-          <div class="bar bar--seg" id="pBar" role="button" tabindex="0" aria-label="Proteiinin jakauma"></div>
+          <div class="bar"><div class="bar__seg" id="pSegs"></div></div>
         </div>
         <div class="macro">
           <div class="macro__top">
             <span>Hiilarit</span><span class="muted"><span id="cNow">0</span> / <span id="cGoal">170</span> g</span>
           </div>
-          <div class="bar bar--seg" id="cBar" role="button" tabindex="0" aria-label="Hiilarien jakauma"></div>
+          <div class="bar"><div class="bar__seg" id="cSegs"></div></div>
         </div>
         <div class="macro">
           <div class="macro__top">
             <span>Rasva</span><span class="muted"><span id="fNow">0</span> / <span id="fGoal">70</span> g</span>
           </div>
-          <div class="bar bar--seg" id="fBar" role="button" tabindex="0" aria-label="Rasvan jakauma"></div>
+          <div class="bar"><div class="bar__seg" id="fSegs"></div></div>
         </div>
       </div>
-
-      <details class="details" style="margin-top:12px">
-        <summary>Lisäasetukset</summary>
-        <div class="form-grid">
-          <label>Kaloritavoite (max)<input type="number" id="goalMax" value="2000" /></label>
-          <label>Kaloritavoite (min)<input type="number" id="goalMin" value="1900" /></label>
-          <label>Proteiinitavoite (g)<input type="number" id="goalP" value="140" /></label>
-          <label>Hiilaritavoite (g)<input type="number" id="goalC" value="170" /></label>
-          <label>Rasvatavoite (g)<input type="number" id="goalF" value="70" /></label>
-          <label>Askeleet tänään<input type="number" id="steps" value="0" /></label>
-          <label>Treeni (kcal)<input type="number" id="workoutKcal" value="0" /></label>
-          <label>Uni (tunnit)<input type="number" id="sleepH" value="0" /></label>
-        </div>
-        <p class="hint">Askeleet arvioidaan ~0.04 kcal/askel. (Watch/uni automaattisesti vaatii natiivin iOS-sovelluksen.)</p>
-      </details>
     </section>
 
     <details class="card carddet" open id="secAdd">
       <summary class="cardSum">Lisää ruokaa</summary>
-
       <div class="row">
         <div class="seg" id="mealSeg">
           <button class="seg__btn is-on" data-meal="aamiainen">Aamiainen</button>
@@ -114,107 +101,112 @@
           <button class="seg__btn" data-meal="iltapala">Iltapala</button>
         </div>
       </div>
-
+      <div class="tabhint" id="mealHint">Valitse tuote listalta.</div>
       <div id="productList" class="list"></div>
-    </details>
-
-    <details class="card carddet" open id="secCustom">
-      <summary class="cardSum">Tuotteet</summary>
-      <div class="row">
-        <div class="muted">Lisää tuotteita (OFF tai itse luotu). Kaikki tuotteet ovat samanarvoisia.</div>
-        <button class="ghost" id="btnOpenCustom">Lisää tuote</button>
+      <div class="row row--tight">
+        <button class="ghost" id="btnAddProduct" type="button">+ Lisää tuote</button>
       </div>
-    </details>
-
-    <details class="card carddet" open id="secLog">
-      <summary class="cardSum">Päivän syömiset</summary>
-      <div class="row">
-        <div class="muted">Kirjaukset valitulle päivälle.</div>
-        <button class="ghost" id="btnExport">Vie</button>
-      </div>
-      <div id="logList" class="log"></div>
     </details>
 
     <details class="card carddet" open id="secSuggest">
       <summary class="cardSum">Suositus</summary>
-      <div class="muted">Suositus tasapainottaa päivän makroja. Suosikit priorisoidaan, jos ne täsmäävät tarpeeseen.</div>
-      <div class="mealplan" id="mealPlan"></div>
-      <div class="row row--tight" style="margin-top:10px">
-        <button class="ghost" id="btnSuggest">Päivitä</button>
-        <div class="muted" id="suggestUpdated" style="margin-left:auto">–</div>
+      <div class="row row--tight" style="margin-top:6px">
+        <button class="ghost" id="btnSuggestRefresh" type="button">Päivitä</button>
+        <div class="muted" id="suggestHint" style="margin-left:auto">–</div>
       </div>
       <div class="suggest" id="suggestBox">–</div>
+      <div class="row row--tight" style="margin-top:10px">
+        <button class="primary" id="btnApplySuggestion" type="button">Lisää suositus</button>
+        <button class="ghost" id="btnSuggestAlt" type="button">Vaihda vaihtoehto</button>
+      </div>
     </details>
 
   </main>
 
-  <!-- Product card modal -->
-  <div class="modalOverlay is-hidden" id="productModal" role="dialog" aria-modal="true" aria-labelledby="productTitle">
+  <!-- Goal modal -->
+  <div class="modalOverlay is-hidden" id="goalModal" role="dialog" aria-modal="true" aria-labelledby="goalTitle">
     <div class="modal">
       <div class="modal__head">
-        <h3 id="productTitle">Tuote</h3>
-        <button class="ghost" type="button" id="btnCloseProduct" aria-label="Sulje">✕</button>
+        <h3 id="goalTitle">Päivän tavoite</h3>
+        <button class="ghost" type="button" id="btnGoalClose" aria-label="Sulje">✕</button>
       </div>
-
-      <div class="productHero" style="margin-top:10px">
-        <img id="pmImg" alt="" class="productImg is-hidden" />
-        <div style="min-width:0">
-          <div class="row" style="align-items:flex-start">
-            <div style="min-width:0">
-              <div class="productName">
-                <button class="heart" id="pmHeart" type="button" aria-label="Suosikki">🤍</button>
-                <span id="pmName">–</span>
-              </div>
-              <div class="muted" style="font-size:12px;margin-top:4px" id="pmMeta">–</div>
-            </div>
-            <div class="pill" id="pmNew" style="display:none">UUTUUS</div>
-          </div>
-
-          <div class="stepper" style="margin-top:10px">
-            <button class="stepper__btn" type="button" id="pmDec" aria-label="miinus">−</button>
-            <div class="minirow stepper__mid">
-              <div class="qty"><span id="pmUnits">1</span> <span id="pmUnit">annos</span></div>
-              <div class="totalsline"><span id="pmGrams">0</span> g</div>
-            </div>
-            <button class="stepper__btn" type="button" id="pmInc" aria-label="plus">+</button>
-          </div>
-
-          <div class="totalsline" style="margin-top:10px">
-            <strong><span id="pmKcal">0</span></strong> kcal • P <span id="pmP">0</span> • H <span id="pmC">0</span> • R <span id="pmF">0</span>
-          </div>
-        </div>
+      <div class="form-grid" style="margin-top:12px">
+        <label>Perustavoite (kcal)<input type="number" id="gBase" /></label>
+        <label>Treenitavoite (kcal)<input type="number" id="gWorkout" /></label>
+        <label>Askeltavoite (askelta)<input type="number" id="gSteps" /></label>
+        <label>Uni (tunnit)<input type="number" id="gSleep" /></label>
       </div>
-
-      <div class="row row--tight" style="margin-top:14px">
-        <button class="ghost" type="button" id="pmEdit">Muokkaa</button>
-        <button class="primary" type="button" id="pmAccept">V</button>
-        <button class="ghost" type="button" id="pmCancel">X</button>
+      <div class="kpi" style="margin-top:12px">
+        <div class="kpi__label">Päivän tavoite yhteensä</div>
+        <div class="kpi__value"><span id="gTotal">0</span><span class="unit">kcal</span></div>
+        <div class="small muted" id="gExplain">= perus + treeni + askeleet</div>
       </div>
-
-      <div id="pmEditArea" class="is-hidden" style="margin-top:12px">
-        <div class="form-grid">
-          <label>Nimi<input id="pmEName" /></label>
-          <label>Kategoria<input id="pmECat" list="catList" /></label>
-          <label>Kalorit / 100g<input id="pmEKcal" type="number" /></label>
-          <label>Proteiini / 100g<input id="pmEP" type="number" /></label>
-          <label>Hiilarit / 100g<input id="pmEC" type="number" /></label>
-          <label>Rasva / 100g<input id="pmEF" type="number" /></label>
-          <label>Yksikkö<input id="pmEUnit" placeholder="g, kg, annos, kpl, dl" /></label>
-          <label>g / yksikkö<input id="pmEGPU" type="number" /></label>
-          <label>EAN<input id="pmEEAN" inputmode="numeric" placeholder="viivakoodi (valinnainen)" /></label>
-          <label>Kuva-URL<input id="pmEImg" placeholder="valinnainen" /></label>
-        </div>
-        <div class="row row--tight" style="margin-top:12px">
-          <button class="primary" type="button" id="pmSaveEdit">Tallenna</button>
-          <button class="ghost" type="button" id="pmCancelEdit">Peruuta</button>
-        </div>
+      <div class="row row--tight" style="margin-top:12px">
+        <button class="primary" type="button" id="btnGoalSave">V</button>
+        <button class="ghost" type="button" id="btnGoalCancel">X</button>
       </div>
-
-      <datalist id="catList"></datalist>
     </div>
   </div>
 
-  <!-- Add product modal (OFF + manual) -->
+  <!-- Date modal -->
+  <div class="modalOverlay is-hidden" id="dateModal" role="dialog" aria-modal="true" aria-labelledby="dateTitle">
+    <div class="modal">
+      <div class="modal__head">
+        <h3 id="dateTitle">Valitse päivä</h3>
+        <button class="ghost" type="button" id="btnDateClose" aria-label="Sulje">✕</button>
+      </div>
+      <div class="form-grid" style="margin-top:12px">
+        <label>Päivämäärä<input type="date" id="datePick" /></label>
+      </div>
+      <div class="row row--tight" style="margin-top:12px">
+        <button class="ghost" type="button" id="btnToday">Tänään</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save prompt modal -->
+  <div class="modalOverlay is-hidden" id="savePrompt" role="dialog" aria-modal="true" aria-labelledby="spTitle">
+    <div class="modal">
+      <div class="modal__head">
+        <h3 id="spTitle">Tallennetaanko muutokset tälle päivälle?</h3>
+        <button class="ghost" type="button" id="btnSpClose" aria-label="Sulje">✕</button>
+      </div>
+      <p class="muted" id="spDay" style="margin-top:10px">Päivä: –</p>
+      <div class="row row--tight" style="margin-top:12px">
+        <button class="primary" type="button" id="btnSpSave">Tallenna</button>
+        <button class="ghost" type="button" id="btnSpDiscard">Älä tallenna</button>
+        <button class="ghost" type="button" id="btnSpCancel">Peruuta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day meals modal -->
+  <div class="modalOverlay is-hidden" id="dayMealsModal" role="dialog" aria-modal="true" aria-labelledby="dmTitle">
+    <div class="modal">
+      <div class="modal__head">
+        <h3 id="dmTitle">Päivän syömiset</h3>
+        <button class="ghost" type="button" id="btnDmClose" aria-label="Sulje">✕</button>
+      </div>
+      <div id="dayMealsBody" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- Product modal -->
+  <div class="modalOverlay is-hidden" id="productModal" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+    <div class="modal">
+      <div class="modal__head">
+        <h3 id="pmTitle">Tuote</h3>
+        <button class="ghost" type="button" id="btnPmClose" aria-label="Sulje">✕</button>
+      </div>
+      <div class="pmBody" id="pmBody" style="margin-top:10px"></div>
+      <div class="row row--tight" style="margin-top:12px">
+        <button class="primary" type="button" id="btnPmApply">V</button>
+        <button class="ghost" type="button" id="btnPmCancel">X</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add / edit product modal (reuse old customModal structure) -->
   <div class="modalOverlay is-hidden" id="customModal" role="dialog" aria-modal="true" aria-labelledby="customTitle">
     <div class="modal">
       <div class="modal__head">
@@ -239,72 +231,19 @@
 
       <div class="form-grid" style="margin-top:12px">
         <label>Nimi<input id="cfName" /></label>
-        <label>Kategoria<input id="cfCat" list="catList2" placeholder="aamiainen, lounas…" /></label>
+        <label>Kategoria<input id="cfCat" placeholder="aamiainen, lounas..." /></label>
+        <label>EAN (valinnainen)<input id="cfEan" /></label>
         <label>Kalorit / 100g<input id="cfKcal" type="number" /></label>
         <label>Proteiini / 100g<input id="cfP" type="number" /></label>
         <label>Hiilarit / 100g<input id="cfC" type="number" /></label>
         <label>Rasva / 100g<input id="cfF" type="number" /></label>
-        <label>Yksikkö<input id="cfUnit" placeholder="g, kg, annos, kpl, dl" /></label>
+        <label>Yksikkö<input id="cfUnit" placeholder="viipale, kpl, dl" /></label>
         <label>g / yksikkö<input id="cfGPU" type="number" placeholder="35" /></label>
-        <label>EAN<input id="cfEAN" inputmode="numeric" placeholder="valinnainen" /></label>
-        <label>Kuva-URL<input id="cfImg" placeholder="valinnainen" /></label>
       </div>
 
       <div class="row row--tight" style="margin-top:12px">
         <button class="primary" type="button" id="btnSaveCustom">Tallenna</button>
         <button class="ghost" type="button" id="btnCancelCustom">Peruuta</button>
-      </div>
-
-      <datalist id="catList2"></datalist>
-    </div>
-  </div>
-
-  <!-- Day picker modal -->
-  <div class="modalOverlay is-hidden" id="dayModal" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
-    <div class="modal">
-      <div class="modal__head">
-        <h3 id="dayTitle">Vaihda päivä</h3>
-        <button class="ghost" type="button" id="btnCloseDay" aria-label="Sulje">✕</button>
-      </div>
-      <div class="form-grid" style="margin-top:12px">
-        <label>Päivämäärä
-          <input id="dayPicker" type="date" />
-        </label>
-      </div>
-      <div class="row row--tight" style="margin-top:12px">
-        <button class="primary" type="button" id="btnToday">Tänään</button>
-        <button class="ghost" type="button" id="btnDayApply">Valitse</button>
-      </div>
-      <p class="hint">Voit palata menneisiin päiviin ja kirjata takautuvasti.</p>
-    </div>
-  </div>
-
-  <!-- Save changes confirm -->
-  <div class="modalOverlay is-hidden" id="saveConfirmModal" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
-    <div class="modal">
-      <div class="modal__head">
-        <h3 id="saveTitle">Tallennetaanko muutokset tälle päivälle?</h3>
-        <button class="ghost" type="button" id="btnCloseSaveConfirm" aria-label="Sulje">✕</button>
-      </div>
-      <p class="muted" id="saveConfirmDay" style="margin-top:10px">Päivä: –</p>
-      <div class="row row--tight" style="margin-top:12px">
-        <button class="primary" type="button" id="btnSaveYes">Tallenna</button>
-        <button class="ghost" type="button" id="btnSaveNo">Älä tallenna</button>
-        <button class="ghost" type="button" id="btnSaveCancel">Peruuta</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Breakdown modal -->
-  <div class="modalOverlay is-hidden" id="breakdownModal" role="dialog" aria-modal="true" aria-labelledby="breakTitle">
-    <div class="modal">
-      <div class="modal__head">
-        <h3 id="breakTitle">Ateriat</h3>
-        <button class="ghost" type="button" id="btnCloseBreak" aria-label="Sulje">✕</button>
-      </div>
-      <div id="breakdownBody" style="margin-top:12px"></div>
-      <div class="row row--tight" style="margin-top:12px">
-        <button class="ghost" type="button" id="btnBreakClose">X</button>
       </div>
     </div>
   </div>

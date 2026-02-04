@@ -1,7 +1,7 @@
 {
   "name": "Ruokasi",
   "short_name": "Ruokasi",
-  "start_url": "./?v=v3.3.0.0",
+  "start_url": "/Ruokas-v2/?v=3.3.0.0",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0A84FF",
@@ -12,5 +12,5 @@
       "type": "image/png"
     }
   ],
-  "scope": "./"
+  "scope": "/Ruokas-v2/"
 }
