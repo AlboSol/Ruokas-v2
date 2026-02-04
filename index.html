@@ -99,6 +99,8 @@
           <button class="seg__btn" data-meal="välipala">Välipala</button>
           <button class="seg__btn" data-meal="päivällinen">Päivällinen</button>
           <button class="seg__btn" data-meal="iltapala">Iltapala</button>
+          <button class="seg__btn" data-meal="juomat">Juomat</button>
+          <button class="seg__btn" data-meal="jälkiruoka">Jälkiruoat</button>
         </div>
       </div>
       <div class="tabhint" id="mealHint">Valitse tuote listalta.</div>
@@ -114,6 +116,7 @@
         <button class="ghost" id="btnSuggestRefresh" type="button">Päivitä</button>
         <div class="muted" id="suggestHint" style="margin-left:auto">–</div>
       </div>
+      <div class="mealplan" id="mealPlan" aria-label="Ateriat suosituksessa"></div>
       <div class="suggest" id="suggestBox">–</div>
       <div class="row row--tight" style="margin-top:10px">
         <button class="primary" id="btnApplySuggestion" type="button">Lisää suositus</button>
@@ -122,6 +125,22 @@
     </details>
 
   </main>
+
+
+  <!-- Confirm modal -->
+  <div class="modalOverlay is-hidden" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
+    <div class="modal">
+      <div class="modal__head">
+        <h3 id="cmTitle">Vahvista</h3>
+        <button class="ghost" type="button" id="btnCmClose" aria-label="Sulje">✕</button>
+      </div>
+      <p class="muted" id="cmText" style="margin-top:10px">–</p>
+      <div class="row row--tight" style="margin-top:12px">
+        <button class="btnV" type="button" id="btnCmYes">V</button>
+        <button class="btnX" type="button" id="btnCmNo">X</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Goal modal -->
   <div class="modalOverlay is-hidden" id="goalModal" role="dialog" aria-modal="true" aria-labelledby="goalTitle">
@@ -142,8 +161,8 @@
         <div class="small muted" id="gExplain">= perus + treeni + askeleet</div>
       </div>
       <div class="row row--tight" style="margin-top:12px">
-        <button class="primary" type="button" id="btnGoalSave">V</button>
-        <button class="ghost" type="button" id="btnGoalCancel">X</button>
+        <button class="btnV" type="button" id="btnGoalSave">V</button>
+        <button class="btnX" type="button" id="btnGoalCancel">X</button>
       </div>
     </div>
   </div>
@@ -160,22 +179,6 @@
       </div>
       <div class="row row--tight" style="margin-top:12px">
         <button class="ghost" type="button" id="btnToday">Tänään</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Save prompt modal -->
-  <div class="modalOverlay is-hidden" id="savePrompt" role="dialog" aria-modal="true" aria-labelledby="spTitle">
-    <div class="modal">
-      <div class="modal__head">
-        <h3 id="spTitle">Tallennetaanko muutokset tälle päivälle?</h3>
-        <button class="ghost" type="button" id="btnSpClose" aria-label="Sulje">✕</button>
-      </div>
-      <p class="muted" id="spDay" style="margin-top:10px">Päivä: –</p>
-      <div class="row row--tight" style="margin-top:12px">
-        <button class="primary" type="button" id="btnSpSave">Tallenna</button>
-        <button class="ghost" type="button" id="btnSpDiscard">Älä tallenna</button>
-        <button class="ghost" type="button" id="btnSpCancel">Peruuta</button>
       </div>
     </div>
   </div>
@@ -200,8 +203,10 @@
       </div>
       <div class="pmBody" id="pmBody" style="margin-top:10px"></div>
       <div class="row row--tight" style="margin-top:12px">
-        <button class="primary" type="button" id="btnPmApply">V</button>
-        <button class="ghost" type="button" id="btnPmCancel">X</button>
+        <button class="ghost" type="button" id="btnPmTrash" title="Poista">🗑</button>
+        <div style="flex:1"></div>
+        <button class="btnV" type="button" id="btnPmApply">V</button>
+        <button class="btnX" type="button" id="btnPmCancel">X</button>
       </div>
     </div>
   </div>
@@ -231,7 +236,17 @@
 
       <div class="form-grid" style="margin-top:12px">
         <label>Nimi<input id="cfName" /></label>
-        <label>Kategoria<input id="cfCat" placeholder="aamiainen, lounas..." /></label>
+        <label>Kategoria
+            <select id="cfCat">
+              <option value="aamiainen">Aamiainen</option>
+              <option value="lounas">Lounas</option>
+              <option value="välipala">Välipala</option>
+              <option value="päivällinen">Päivällinen</option>
+              <option value="iltapala">Iltapala</option>
+              <option value="juomat">Juomat</option>
+              <option value="jälkiruoka">Jälkiruoat</option>
+            </select>
+          </label>
         <label>EAN (valinnainen)<input id="cfEan" /></label>
         <label>Kalorit / 100g<input id="cfKcal" type="number" /></label>
         <label>Proteiini / 100g<input id="cfP" type="number" /></label>
@@ -242,8 +257,8 @@
       </div>
 
       <div class="row row--tight" style="margin-top:12px">
-        <button class="primary" type="button" id="btnSaveCustom">Tallenna</button>
-        <button class="ghost" type="button" id="btnCancelCustom">Peruuta</button>
+        <button class="primary" type="button" class="btnV" id="btnSaveCustom">V</button>
+        <button class="ghost" type="button" class="btnX" id="btnCancelCustom">X</button>
       </div>
     </div>
   </div>
